@@ -13,13 +13,13 @@ class UserCRUD:
     @staticmethod
     def create(db: Session, user_in: UserCreate) -> User:
         """Create a new user"""
-        # Hash password if provided
         hashed_password = None
         if user_in.password:
             hashed_password = get_password_hash(user_in.password)
         
         db_user = User(
             full_name=user_in.full_name,
+            email=user_in.email,
             phone_number=user_in.phone_number,
             password=hashed_password,
             role=user_in.role,
@@ -33,9 +33,10 @@ class UserCRUD:
             return db_user
         except IntegrityError:
             db.rollback()
+            
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this phone number already exists"
+                detail="User with this email or phone number already exists"
             )
 
     @staticmethod
@@ -47,6 +48,12 @@ class UserCRUD:
     def get_by_phone(db: Session, phone_number: str) -> Optional[User]:
         """Get user by phone number"""
         return db.query(User).filter(User.phone_number == phone_number).first()
+
+    @staticmethod
+    def get_by_email(db: Session, email: str) -> Optional[User]:
+        """Get user by email address"""
+        
+        return db.query(User).filter(User.email == email).first()
 
     @staticmethod
     def get_all(

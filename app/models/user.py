@@ -18,18 +18,20 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     full_name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=True)
     phone_number = Column(String(20), unique=True, nullable=False, index=True)
-    password = Column(String(255), nullable=True)  # Nullable for Google auth users
+    password = Column(String(255), nullable=True)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT)
     parents_phone = Column(String(20), nullable=True)
-    status = Column(Boolean, default=True, nullable=False)  # True = active, False = inactive
+    status = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Indexes for common queries
+    
     __table_args__ = (
         Index('ix_users_role_status', 'role', 'status'),
         Index('ix_users_created_at', 'created_at'),
+        Index('ix_users_email', 'email'),
     )
 
     def __repr__(self):
