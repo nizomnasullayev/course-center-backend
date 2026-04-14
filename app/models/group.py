@@ -33,6 +33,7 @@ class Group(Base):
     # Relationships (makes it easy to do group.teacher.full_name)
     subject = relationship("Subject")
     teacher = relationship("User")
-
+    students = relationship("GroupStudent", back_populates="group", cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f"<Group(id={self.id}, name='{self.name}', status={self.status})>"
