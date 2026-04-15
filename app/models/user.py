@@ -18,7 +18,7 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     full_name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
     phone_number = Column(String(20), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=True)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT)

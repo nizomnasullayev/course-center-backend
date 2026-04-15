@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -6,22 +6,19 @@ import re
 
 from app.models.user import UserRole
 
-# --- Standalone helper functions ---
 
 def _validate_phone(v: Optional[str]) -> Optional[str]:
     if v is None:
         return v
-    # Basic international phone validation
     pattern = r'^\+?[\d\s\-\(\)]+$'
     if not re.match(pattern, v):
         raise ValueError('Invalid phone number format')
-    # Remove spaces and dashes for storage
     cleaned = re.sub(r'[\s\-\(\)]', '', v)
     if len(cleaned) < 5:
         raise ValueError('Phone number too short')
     return cleaned
 
-# This was the missing function causing your error!
+
 def _validate_password(v: Optional[str]) -> Optional[str]:
     if v is None:
         return v
@@ -30,11 +27,9 @@ def _validate_password(v: Optional[str]) -> Optional[str]:
     return v
 
 
-# --- Schemas ---
-
 class UserBase(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=255)
-    email: EmailStr 
+    email: EmailStr
     phone_number: str = Field(..., min_length=5, max_length=20)
     role: UserRole = UserRole.STUDENT
     parents_phone: Optional[str] = Field(None, min_length=5, max_length=20)
@@ -47,7 +42,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Optional[str] = Field(None, min_length=8, max_length=100)
-    
+
     @field_validator('password')
     @classmethod
     def validate_password(cls, v: Optional[str]) -> Optional[str]:
@@ -56,7 +51,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    email: Optional[EmailStr] = None 
+    email: Optional[EmailStr] = None
     phone_number: Optional[str] = Field(None, min_length=5, max_length=20)
     password: Optional[str] = Field(None, min_length=8, max_length=100)
     role: Optional[UserRole] = None
@@ -74,8 +69,13 @@ class UserUpdate(BaseModel):
         return _validate_password(v)
 
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: UUID
+    full_name: str
+    email: Optional[EmailStr] = None
+    phone_number: str
+    role: UserRole
+    parents_phone: Optional[str] = None
     status: bool
     created_at: datetime
     updated_at: datetime
@@ -85,4 +85,4 @@ class UserResponse(UserBase):
 
 
 class UserInDB(UserResponse):
-    password: Optional[str]
+    password: Optional[str] = None
