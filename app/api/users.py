@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from app.database import get_db
-from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserPaginationResponse
 from app.crud.user import user_crud
 from app.models.user import UserRole, User
 from app.dependencies import get_current_user, require_admin, require_teacher
@@ -12,7 +12,7 @@ from app.dependencies import get_current_user, require_admin, require_teacher
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db),
@@ -28,7 +28,7 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("", response_model=UserPaginationResponse)
 def get_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -38,7 +38,8 @@ def get_users(
     current_user: User = Depends(require_teacher)  # Teachers and admins can list users
 ):
     """Get all users with optional filters (Teachers and Admins)"""
-    return user_crud.get_all(db, skip=skip, limit=limit, role=role, status=status)
+    total, items = user_crud.get_all(db, skip=skip, limit=limit, role=role, status=status)
+    return {"total": total, "items": items}
 
 
 @router.get("/{user_id}", response_model=UserResponse)

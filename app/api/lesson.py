@@ -1,15 +1,30 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
 
 from app.database import get_db
 from app.crud.lesson import lesson_crud
-from app.schemas.lesson import LessonCreate, LessonUpdate, LessonResponse
+from app.schemas.lesson import LessonCreate, LessonUpdate, LessonResponse, LessonPaginationResponse
 from app.models.user import User, UserRole
 from app.dependencies import get_current_user, require_admin
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
+
+@router.get("", response_model=LessonPaginationResponse)
+def get_all_lessons(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Retrieve all lessons globally (Admin only)"""
+    total, items = lesson_crud.get_all_paginated(db, skip=skip, limit=limit)
+    # Join additional info
+    for lesson in items:
+        lesson.group_name = lesson.group.name
+        lesson.teacher_name = lesson.teacher.full_name if lesson.teacher else "No Teacher"
+    return {"total": total, "items": items}
 
 @router.get("/group/{group_id}", response_model=List[LessonResponse])
 def get_group_lessons(

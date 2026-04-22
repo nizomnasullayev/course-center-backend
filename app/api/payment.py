@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 from uuid import UUID
@@ -6,11 +6,25 @@ from uuid import UUID
 from app.database import get_db
 from app.crud.payment import payment_crud
 from app.crud.group import group_crud
-from app.schemas.payment import PaymentCreate, PaymentResponse
+from app.schemas.payment import PaymentCreate, PaymentResponse, PaymentPaginationResponse
 from app.models.user import User, UserRole
 from app.dependencies import get_current_user, require_admin
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+
+@router.get("", response_model=PaymentPaginationResponse)
+def get_all_payments(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """Retrieve all payments globally (Admin only)"""
+    total, items = payment_crud.get_all(db, skip=skip, limit=limit)
+    for p in items:
+        p.student_name = p.student.full_name
+        p.group_name = p.group.name if p.group else "General"
+    return {"total": total, "items": items}
 
 @router.post("", response_model=PaymentResponse)
 def record_payment(

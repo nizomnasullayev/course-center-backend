@@ -45,6 +45,18 @@ class LessonCRUD:
         """Get all lessons for a specific group"""
         return db.query(Lesson).filter(Lesson.group_id == group_id).order_by(Lesson.lesson_date).all()
 
+    def get_all_paginated(
+        self,
+        db: Session,
+        skip: int = 0,
+        limit: int = 100
+    ) -> tuple[int, List[Lesson]]:
+        """Get all lessons globally with pagination"""
+        query = db.query(Lesson).order_by(Lesson.lesson_date.desc())
+        total = query.count()
+        items = query.offset(skip).limit(limit).all()
+        return total, items
+
     def get_by_id(self, db: Session, lesson_id: UUID) -> Optional[Lesson]:
         return db.query(Lesson).filter(Lesson.id == lesson_id).first()
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 import re
@@ -82,6 +82,11 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserPaginationResponse(BaseModel):
+    total: int
+    items: List[UserResponse]
 
 
 class UserInDB(UserResponse):

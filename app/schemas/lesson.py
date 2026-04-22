@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 import enum
@@ -35,3 +35,8 @@ class LessonResponse(LessonBase):
 
     class Config:
         from_attributes = True
+
+
+class LessonPaginationResponse(BaseModel):
+    total: int
+    items: List[LessonResponse]

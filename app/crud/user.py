@@ -62,7 +62,7 @@ class UserCRUD:
         limit: int = 100,
         role: Optional[UserRole] = None,
         status: Optional[bool] = None
-    ) -> List[User]:
+    ) -> tuple[int, List[User]]:
         """Get all users with optional filters"""
         query = db.query(User)
         
@@ -72,7 +72,9 @@ class UserCRUD:
         if status is not None:
             query = query.filter(User.status == status)
         
-        return query.offset(skip).limit(limit).all()
+        total = query.count()
+        items = query.offset(skip).limit(limit).all()
+        return total, items
 
     @staticmethod
     def update(db: Session, user_id: UUID, user_in: UserUpdate) -> Optional[User]:
