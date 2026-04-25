@@ -1,8 +1,8 @@
 """create tables
 
-Revision ID: b6e85a341551
+Revision ID: f692edfbb3d1
 Revises: 
-Create Date: 2026-04-15 09:50:13.217091
+Create Date: 2026-04-25 10:09:05.950839
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b6e85a341551'
+revision: str = 'f692edfbb3d1'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,21 +33,27 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('full_name', sa.String(length=255), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=True),
+    sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('phone_number', sa.String(length=20), nullable=False),
     sa.Column('password', sa.String(length=255), nullable=True),
     sa.Column('role', sa.Enum('ADMIN', 'TEACHER', 'STUDENT', name='userrole'), nullable=False),
     sa.Column('parents_phone', sa.String(length=20), nullable=True),
     sa.Column('status', sa.Boolean(), nullable=False),
+    sa.Column('telegram_chat_id', sa.String(length=50), nullable=True),
+    sa.Column('telegram_link_token', sa.String(length=100), nullable=True),
+    sa.Column('telegram_link_expires_at', sa.DateTime(), nullable=True),
+    sa.Column('telegram_notifications_enabled', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('ix_users_created_at', 'users', ['created_at'], unique=False)
-    op.create_index('ix_users_email', 'users', ['email'], unique=False)
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_index(op.f('ix_users_phone_number'), 'users', ['phone_number'], unique=True)
     op.create_index('ix_users_role_status', 'users', ['role', 'status'], unique=False)
+    op.create_index(op.f('ix_users_telegram_chat_id'), 'users', ['telegram_chat_id'], unique=True)
+    op.create_index(op.f('ix_users_telegram_link_token'), 'users', ['telegram_link_token'], unique=True)
     op.create_table('groups',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -134,10 +140,12 @@ def downgrade() -> None:
     op.drop_table('group_students')
     op.drop_index(op.f('ix_groups_id'), table_name='groups')
     op.drop_table('groups')
+    op.drop_index(op.f('ix_users_telegram_link_token'), table_name='users')
+    op.drop_index(op.f('ix_users_telegram_chat_id'), table_name='users')
     op.drop_index('ix_users_role_status', table_name='users')
     op.drop_index(op.f('ix_users_phone_number'), table_name='users')
     op.drop_index(op.f('ix_users_id'), table_name='users')
-    op.drop_index('ix_users_email', table_name='users')
+    op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_index('ix_users_created_at', table_name='users')
     op.drop_table('users')
     op.drop_index(op.f('ix_subjects_name'), table_name='subjects')

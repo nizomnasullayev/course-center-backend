@@ -6,6 +6,8 @@ from fastapi import HTTPException, status
 from app.models.group import Group
 from app.models.user import User, UserRole
 from app.schemas.group import GroupCreate, GroupUpdate
+from app.services.background_tasks import background_task
+from app.services.notification_helpers import NotificationHelper
 
 class GroupCRUD:
     def _verify_teacher(self, db: Session, teacher_id: Optional[UUID]):
@@ -46,7 +48,6 @@ class GroupCRUD:
         
         update_data = group_in.model_dump(exclude_unset=True)
         
-        # If teacher_id is being updated, verify it again
         if "teacher_id" in update_data:
             self._verify_teacher(db, update_data["teacher_id"])
         
@@ -55,6 +56,12 @@ class GroupCRUD:
             
         db.commit()
         db.refresh(db_group)
+        
+        # TODO: Add notification back later
+        # if changes:
+        #     from app.services.notification_helpers import NotificationHelper
+        #     # send notification
+        
         return db_group
 
     def delete(self, db: Session, group_id: UUID) -> bool:

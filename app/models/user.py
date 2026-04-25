@@ -24,6 +24,10 @@ class User(Base):
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT)
     parents_phone = Column(String(20), nullable=True)
     status = Column(Boolean, default=True, nullable=False)
+    telegram_chat_id = Column(String(50), unique=True, nullable=True, index=True)
+    telegram_link_token = Column(String(100), unique=True, nullable=True, index=True)
+    telegram_link_expires_at = Column(DateTime, nullable=True)  # Token expiration
+    telegram_notifications_enabled = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

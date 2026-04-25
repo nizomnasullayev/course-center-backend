@@ -8,6 +8,8 @@ from fastapi import HTTPException, status
 from app.models.group_student import GroupStudent
 from app.models.user import User, UserRole
 from app.schemas.group_student import GroupStudentCreate
+from app.services.background_tasks import background_task
+from app.services.notification_helpers import NotificationHelper
 
 class GroupStudentCRUD:
     def create(self, db: Session, obj_in: GroupStudentCreate) -> GroupStudent:
@@ -29,6 +31,12 @@ class GroupStudentCRUD:
             joined_date=obj_in.joined_date or datetime.utcnow()
         )
         
+        @background_task
+        async def send_notification():
+            await NotificationHelper.notify_student_enrolled(db, db_obj.id)
+        
+        send_notification()
+
         try:
             db.add(db_obj)
             db.commit()
@@ -44,6 +52,9 @@ class GroupStudentCRUD:
     def get_students_by_group(self, db: Session, group_id: UUID) -> List[GroupStudent]:
         """Get all students enrolled in a specific group"""
         return db.query(GroupStudent).filter(GroupStudent.group_id == group_id).all()
+    
+    def get_by_id(self, db: Session, enrollment_id: UUID) -> Optional[GroupStudent]:
+        return db.query(GroupStudent).filter(GroupStudent.id == enrollment_id).first()
 
     def remove_student_from_group(self, db: Session, enrollment_id: UUID) -> bool:
         """Unenroll a student"""

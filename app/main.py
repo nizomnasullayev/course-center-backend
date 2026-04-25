@@ -1,7 +1,8 @@
+# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import api_router
-# from app.config import settings
+from app.config import settings  # Remove the duplicate comment
 
 app = FastAPI(
     title="Course Center API",
@@ -21,6 +22,12 @@ app.add_middleware(
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
 
+@app.on_event("startup")
+async def startup_event():
+    """Start background services"""
+    if settings.TELEGRAM_USE_POLLING:
+        from app.services.telegram_poller import start_telegram_poller
+        start_telegram_poller()
 
 @app.get("/")
 def root():
@@ -29,7 +36,6 @@ def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
-
 
 @app.get("/health")
 def health_check():

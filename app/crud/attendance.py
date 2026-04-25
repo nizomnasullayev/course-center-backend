@@ -9,6 +9,8 @@ from app.models.lesson import Lesson
 from app.models.group_student import GroupStudent
 from app.models.user import User, UserRole
 from app.schemas.attendance import AttendanceCreate, AttendanceUpdate
+from app.services.background_tasks import background_task
+from app.services.notification_helpers import NotificationHelper
 
 class AttendanceCRUD:
     def create(self, db: Session, obj_in: AttendanceCreate) -> Attendance:
@@ -29,6 +31,12 @@ class AttendanceCRUD:
                 detail="Student is not enrolled in the group for this lesson"
             )
 
+        @background_task
+        async def send_notification():
+            await NotificationHelper.notify_attendance_marked(db, db_obj.id)
+        
+        send_notification()
+
         db_obj = Attendance(**obj_in.model_dump())
         try:
             db.add(db_obj)
@@ -41,6 +49,9 @@ class AttendanceCRUD:
 
     def get_by_lesson(self, db: Session, lesson_id: UUID) -> List[Attendance]:
         return db.query(Attendance).filter(Attendance.lesson_id == lesson_id).all()
+    
+    def get_by_id(self, db: Session, attendance_id: UUID) -> Optional[Attendance]:
+        return db.query(Attendance).filter(Attendance.id == attendance_id).first()
 
     def update(self, db: Session, attendance_id: UUID, obj_in: AttendanceUpdate) -> Optional[Attendance]:
         db_obj = db.query(Attendance).filter(Attendance.id == attendance_id).first()

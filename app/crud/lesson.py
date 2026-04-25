@@ -4,10 +4,12 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import datetime
 
-from app.models.lesson import Lesson
+from app.models.lesson import Lesson, LessonStatus
 from app.models.group import Group
 from app.models.user import User, UserRole
 from app.schemas.lesson import LessonCreate, LessonUpdate
+from app.services.notification_helpers import NotificationHelper
+from app.services.background_tasks import background_task
 
 class LessonCRUD:
     def create(self, db: Session, lesson_in: LessonCreate) -> Lesson:
@@ -36,6 +38,12 @@ class LessonCRUD:
             status=lesson_in.status
         )
         
+        @background_task
+        async def send_notification():
+            await NotificationHelper.notify_lesson_created(db, db_obj.id)
+        
+        send_notification()
+
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -61,6 +69,9 @@ class LessonCRUD:
         return db.query(Lesson).filter(Lesson.id == lesson_id).first()
 
     def update(self, db: Session, lesson_id: UUID, lesson_in: LessonUpdate) -> Optional[Lesson]:
+
+        old_lesson = self.get_by_id(db, lesson_id)
+
         db_obj = self.get_by_id(db, lesson_id)
         if not db_obj:
             return None
@@ -69,6 +80,16 @@ class LessonCRUD:
         for field, value in update_data.items():
             setattr(db_obj, field, value)
             
+        if (lesson_in.status and 
+            lesson_in.status == LessonStatus.CANCELLED and 
+            old_lesson.status != LessonStatus.CANCELLED):
+            
+            @background_task
+            async def send_cancellation():
+                await NotificationHelper.notify_lesson_cancelled(db, lesson_id)
+            
+            send_cancellation()
+
         db.commit()
         db.refresh(db_obj)
         return db_obj
