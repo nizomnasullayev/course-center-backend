@@ -25,6 +25,7 @@ class Group(Base):
     # Foreign Keys
     subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="SET NULL"), nullable=True)
     teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    course_center_id = Column(UUID(as_uuid=True), ForeignKey("course_centers.id"), nullable=False)
 
     # Timestamps
     created_at = Column(DateTime, default=func.now(), nullable=False)

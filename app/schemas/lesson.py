@@ -15,6 +15,7 @@ class LessonBase(BaseModel):
     lesson_date: datetime
     topic: Optional[str] = Field(None, max_length=255)
     status: LessonStatus = LessonStatus.PENDING
+    course_center_id: Optional[UUID] = None
 
 class LessonCreate(LessonBase):
     pass

@@ -7,7 +7,7 @@ from app.database import get_db
 from app.crud.group import group_crud
 from app.dependencies.auth import get_current_user, require_admin
 from app.schemas.group import GroupCreate, GroupUpdate, GroupResponse
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 router = APIRouter(prefix="/groups", tags=["groups"])
@@ -21,7 +21,11 @@ def get_all_groups(
     limit: int = 100
 ):
     """Retrieve all groups (Logged-in Users Only)"""
-    return group_crud.get_all(db, skip=skip, limit=limit)
+    course_center_id = None
+    if current_user.role != UserRole.SUPER_ADMIN:
+        course_center_id = current_user.course_center_id
+        
+    return group_crud.get_all(db, skip=skip, limit=limit, course_center_id=course_center_id)
 
 
 @router.get("/{group_id}", response_model=GroupResponse)
@@ -47,6 +51,9 @@ def create_group(
     admin: User = Depends(require_admin)
 ):
     """Create a new group (Admin Only)"""
+    if admin.role != UserRole.SUPER_ADMIN:
+        group_in.course_center_id = admin.course_center_id
+        
     return group_crud.create(db, group_in)
 
 

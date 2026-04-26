@@ -23,6 +23,7 @@ class UserCRUD:
             phone_number=user_in.phone_number,
             password=hashed_password,
             role=user_in.role,
+            course_center_id=user_in.course_center_id,
             parents_phone=user_in.parents_phone,
         )
         
@@ -61,16 +62,22 @@ class UserCRUD:
         skip: int = 0,
         limit: int = 100,
         role: Optional[UserRole] = None,
-        status: Optional[bool] = None
+        status: Optional[bool] = None,
+        course_center_id: Optional[UUID] = None
     ) -> tuple[int, List[User]]:
         """Get all users with optional filters"""
-        query = db.query(User)
+        # Hide super admins from all lists
+        query = db.query(User).filter(User.role != UserRole.SUPER_ADMIN)
         
         if role is not None:
             query = query.filter(User.role == role)
+
         
         if status is not None:
             query = query.filter(User.status == status)
+
+        if course_center_id is not None:
+            query = query.filter(User.course_center_id == course_center_id)
         
         total = query.count()
         items = query.offset(skip).limit(limit).all()

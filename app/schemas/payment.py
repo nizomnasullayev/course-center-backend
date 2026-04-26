@@ -15,6 +15,7 @@ class PaymentBase(BaseModel):
     amount: float = Field(..., gt=0)
     payment_month: str
     type: PaymentType = PaymentType.CASH
+    course_center_id: Optional[UUID] = None
 
 class PaymentCreate(PaymentBase):
     pass

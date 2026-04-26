@@ -17,6 +17,7 @@ class Payment(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     student_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     group_id = Column(UUID(as_uuid=True), ForeignKey("groups.id", ondelete="SET NULL"), nullable=True)
+    course_center_id = Column(UUID(as_uuid=True), ForeignKey("course_centers.id"), nullable=False)
     
     amount = Column(Float, nullable=False)
     payment_month = Column(String(50), nullable=False)  # e.g., "October 2023"

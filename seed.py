@@ -35,7 +35,8 @@ def clear_database(db):
             group_students,
             groups,
             users,
-            subjects
+            subjects,
+            course_centers
         RESTART IDENTITY CASCADE;
     """))
 
@@ -43,8 +44,38 @@ def clear_database(db):
     print("✅ Data cleared")
 
 
-def create_users(db, num_admins=2, num_teachers=5, num_students=30):
-    print(f"\n👥 Creating users...")
+from app.models.course_center import CourseCenter
+
+
+def create_initial_data(db):
+    print("🏢 Creating Course Center...")
+    center = CourseCenter(
+        name="Tashkent Main Branch",
+        address="Tashkent, Uzbekistan",
+        phone_number="+998710000000",
+        status=True
+    )
+    db.add(center)
+    db.commit()
+    db.refresh(center)
+
+    print("👑 Creating Super Admin...")
+    super_admin = User(
+        full_name="Super Admin",
+        email="superadmin@education.uz",
+        phone_number="+998900000000",
+        password="superpasswordhash", # Use actual hash in real life
+        role=UserRole.SUPER_ADMIN,
+        status=True
+    )
+    db.add(super_admin)
+    db.commit()
+    
+    return center
+
+
+def create_users(db, center, num_admins=2, num_teachers=5, num_students=30):
+    print(f"\n👥 Creating users for {center.name}...")
     users = {"admins": [], "teachers": [], "students": []}
 
     for i in range(num_admins):
@@ -54,6 +85,7 @@ def create_users(db, num_admins=2, num_teachers=5, num_students=30):
             phone_number=f"+998{random.randint(90, 99)}{random.randint(1000000, 9999999)}",
             password="hashed_password_here",
             role=UserRole.ADMIN,
+            course_center_id=center.id,
             status=True
         )
         db.add(admin)
@@ -66,6 +98,7 @@ def create_users(db, num_admins=2, num_teachers=5, num_students=30):
             phone_number=f"+998{random.randint(90, 99)}{random.randint(1000000, 9999999)}",
             password="hashed_password_here",
             role=UserRole.TEACHER,
+            course_center_id=center.id,
             status=True
         )
         db.add(teacher)
@@ -78,6 +111,7 @@ def create_users(db, num_admins=2, num_teachers=5, num_students=30):
             phone_number=f"+998{random.randint(90, 99)}{random.randint(1000000, 9999999)}",
             password="hashed_password_here" if random.choice([True, False]) else None,
             role=UserRole.STUDENT,
+            course_center_id=center.id,
             parents_phone=f"+998{random.randint(90, 99)}{random.randint(1000000, 9999999)}",
             status=random.choice([True, True, True, False])
         )
@@ -88,7 +122,7 @@ def create_users(db, num_admins=2, num_teachers=5, num_students=30):
     return users
 
 
-def create_subjects(db):
+def create_subjects(db, center):
     print("\n📚 Creating subjects...")
 
     subject_data = [
@@ -103,7 +137,7 @@ def create_subjects(db):
 
     subjects = []
     for data in subject_data:
-        subject = Subject(**data)
+        subject = Subject(**data, course_center_id=center.id)
         db.add(subject)
         subjects.append(subject)
 
@@ -111,7 +145,7 @@ def create_subjects(db):
     return subjects
 
 
-def create_groups(db, subjects, teachers):
+def create_groups(db, subjects, teachers, center):
     print("\n👨‍🏫 Creating groups...")
 
     schedules = ["Mon-Wed-Fri 09:00", "Tue-Thu-Sat 14:00", "Mon-Wed-Fri 18:00"]
@@ -127,7 +161,8 @@ def create_groups(db, subjects, teachers):
                 start_date=fake.date_time_between(start_date='-1m', end_date='+1m'),
                 status=random.choice([GroupStatus.ACTIVE, GroupStatus.FINISHED]),
                 subject_id=subject.id,
-                teacher_id=random.choice(teachers).id
+                teacher_id=random.choice(teachers).id,
+                course_center_id=center.id
             )
             db.add(group)
             groups.append(group)
@@ -156,7 +191,7 @@ def create_group_students(db, groups, students):
     return group_students
 
 
-def create_lessons(db, groups):
+def create_lessons(db, groups, center):
     print("\n📝 Creating lessons...")
 
     lessons = []
@@ -170,7 +205,8 @@ def create_lessons(db, groups):
                 status=random.choice([
                     LessonStatus.COMPLETED,
                     LessonStatus.PENDING
-                ])
+                ]),
+                course_center_id=center.id
             )
             db.add(lesson)
             lessons.append(lesson)
@@ -179,7 +215,7 @@ def create_lessons(db, groups):
     return lessons
 
 
-def create_attendance(db, lessons, group_students):
+def create_attendance(db, lessons, group_students, center):
     print("\n✔️ Creating attendance...")
 
     attendance = []
@@ -193,7 +229,8 @@ def create_attendance(db, lessons, group_students):
                     status=random.choice([
                         AttendanceStatus.PRESENT,
                         AttendanceStatus.ABSENT
-                    ])
+                    ]),
+                    course_center_id=center.id
                 )
                 db.add(record)
                 attendance.append(record)
@@ -202,7 +239,7 @@ def create_attendance(db, lessons, group_students):
     return attendance
 
 
-def create_payments(db, groups, group_students):
+def create_payments(db, groups, group_students, center):
     print("\n💰 Creating payments...")
 
     payments = []
@@ -218,7 +255,8 @@ def create_payments(db, groups, group_students):
             type=random.choice([
                 PaymentType.CASH,
                 PaymentType.CARD
-            ])
+            ]),
+            course_center_id=center.id
         )
         db.add(payment)
         payments.append(payment)
@@ -235,13 +273,14 @@ def seed_database():
     try:
         clear_database(db)
 
-        users = create_users(db, 2, 8, 50)
-        subjects = create_subjects(db)
-        groups = create_groups(db, subjects, users["teachers"])
+        center = create_initial_data(db)
+        users = create_users(db, center, 2, 8, 50)
+        subjects = create_subjects(db, center)
+        groups = create_groups(db, subjects, users["teachers"], center)
         group_students = create_group_students(db, groups, users["students"])
-        lessons = create_lessons(db, groups)
-        create_attendance(db, lessons, group_students)
-        create_payments(db, groups, group_students)
+        lessons = create_lessons(db, groups, center)
+        create_attendance(db, lessons, group_students, center)
+        create_payments(db, groups, group_students, center)
 
         print("✅ Seeding completed!")
 

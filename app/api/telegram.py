@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.database import get_db
 from app.models.user import User
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_admin
 from app.config import settings
 from app.services.telegram_bot import get_telegram_service  # Change this import
 
@@ -14,6 +14,31 @@ router = APIRouter(prefix="/telegram", tags=["telegram"])
 
 # Don't create instance here - use get_telegram_service() instead
 # telegram_service = TelegramBotService(...)  # REMOVE THIS LINE
+
+@router.post("/generate-link-for-user/{user_id}")
+def generate_telegram_link_for_specific_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    """Generate a unique link for a specific user (Admin Only)"""
+    service = get_telegram_service()
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    token, deep_link, expires_at = service.generate_telegram_link(user_id)
+    
+    user.telegram_link_token = token
+    user.telegram_link_expires_at = expires_at
+    db.commit()
+    
+    return {
+        "telegram_link": deep_link,
+        "expires_at": expires_at.isoformat(),
+        "user_name": user.full_name
+    }
 
 @router.post("/generate-link")
 def generate_telegram_link(

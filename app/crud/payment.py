@@ -47,9 +47,19 @@ class PaymentCRUD:
     def get_by_id(self, db: Session, payment_id: UUID) -> Optional[Payment]:
         return db.query(Payment).filter(Payment.id == payment_id).first()
 
-    def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> tuple[int, List[Payment]]:
+    def get_all(
+        self, 
+        db: Session, 
+        skip: int = 0, 
+        limit: int = 100,
+        course_center_id: Optional[UUID] = None
+    ) -> tuple[int, List[Payment]]:
         """Get all payments globally with pagination"""
-        query = db.query(Payment).order_by(Payment.created_at.desc())
+        query = db.query(Payment)
+        if course_center_id:
+            query = query.filter(Payment.course_center_id == course_center_id)
+        
+        query = query.order_by(Payment.created_at.desc())
         total = query.count()
         items = query.offset(skip).limit(limit).all()
         return total, items

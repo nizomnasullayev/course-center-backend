@@ -17,6 +17,7 @@ class GroupStudentResponse(GroupStudentBase):
     
     # We can include the student's name for the frontend friend
     student_name: Optional[str] = None 
+    student_phone: Optional[str] = None 
 
     class Config:
         from_attributes = True

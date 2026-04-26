@@ -16,6 +16,7 @@ class GroupBase(BaseModel):
     schedule: str = Field(..., description="e.g., Mon-Wed-Fri 18:00")
     start_date: datetime
     status: GroupStatus = GroupStatus.ACTIVE
+    course_center_id: Optional[UUID] = None
 
 
 class GroupCreate(GroupBase):

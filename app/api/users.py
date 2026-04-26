@@ -19,6 +19,10 @@ def create_user(
     current_user: User = Depends(require_admin)  # Only admins can create users
 ):
     """Create a new user (Admin only)"""
+    # If not super_admin, force the user's course_center_id to match the admin's
+    if current_user.role != UserRole.SUPER_ADMIN:
+        user.course_center_id = current_user.course_center_id
+        
     return user_crud.create(db, user)
 
 
@@ -34,11 +38,21 @@ def get_users(
     limit: int = Query(100, ge=1, le=1000),
     role: Optional[UserRole] = None,
     status: Optional[bool] = None,
+    course_center_id: Optional[UUID] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_teacher)  # Teachers and admins can list users
 ):
     """Get all users with optional filters (Teachers and Admins)"""
-    total, items = user_crud.get_all(db, skip=skip, limit=limit, role=role, status=status)
+    # If not super_admin, force filtering by current_user's center
+    if current_user.role != UserRole.SUPER_ADMIN:
+        course_center_id = current_user.course_center_id
+    else:
+        # SUPER_ADMIN handles ONLY admins on this endpoint
+        role = UserRole.ADMIN
+        
+    total, items = user_crud.get_all(
+        db, skip=skip, limit=limit, role=role, status=status, course_center_id=course_center_id
+    )
     return {"total": total, "items": items}
 
 

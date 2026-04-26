@@ -20,7 +20,11 @@ def get_all_payments(
     admin: User = Depends(require_admin)
 ):
     """Retrieve all payments globally (Admin only)"""
-    total, items = payment_crud.get_all(db, skip=skip, limit=limit)
+    course_center_id = None
+    if admin.role != UserRole.SUPER_ADMIN:
+        course_center_id = admin.course_center_id
+        
+    total, items = payment_crud.get_all(db, skip=skip, limit=limit, course_center_id=course_center_id)
     for p in items:
         p.student_name = p.student.full_name
         p.group_name = p.group.name if p.group else "General"
@@ -33,6 +37,9 @@ def record_payment(
     admin: User = Depends(require_admin)
 ):
     """Record a new payment (Admin Only)"""
+    if admin.role != UserRole.SUPER_ADMIN:
+        obj_in.course_center_id = admin.course_center_id
+        
     return payment_crud.create(db, obj_in)
 
 @router.get("/my-payments", response_model=List[PaymentResponse])

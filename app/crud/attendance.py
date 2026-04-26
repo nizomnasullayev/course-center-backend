@@ -9,8 +9,6 @@ from app.models.lesson import Lesson
 from app.models.group_student import GroupStudent
 from app.models.user import User, UserRole
 from app.schemas.attendance import AttendanceCreate, AttendanceUpdate
-from app.services.background_tasks import background_task
-from app.services.notification_helpers import NotificationHelper
 
 class AttendanceCRUD:
     def create(self, db: Session, obj_in: AttendanceCreate) -> Attendance:
@@ -30,12 +28,6 @@ class AttendanceCRUD:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Student is not enrolled in the group for this lesson"
             )
-
-        @background_task
-        async def send_notification():
-            await NotificationHelper.notify_attendance_marked(db, db_obj.id)
-        
-        send_notification()
 
         db_obj = Attendance(**obj_in.model_dump())
         try:

@@ -90,6 +90,7 @@ def require_role(allowed_roles: list[UserRole]):
 
 
 # Convenience dependencies for common role checks
-require_admin = require_role([UserRole.ADMIN])
-require_teacher = require_role([UserRole.ADMIN, UserRole.TEACHER])
-require_student = require_role([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
+require_super_admin = require_role([UserRole.SUPER_ADMIN])
+require_admin = require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN])
+require_teacher = require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER])
+require_student = require_role([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])

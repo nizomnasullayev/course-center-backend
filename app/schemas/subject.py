@@ -6,6 +6,7 @@ from uuid import UUID
 class SubjectBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
+    course_center_id: Optional[UUID] = None
 
 class SubjectCreate(SubjectBase):
     pass

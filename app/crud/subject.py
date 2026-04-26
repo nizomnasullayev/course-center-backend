@@ -14,7 +14,8 @@ class SubjectCRUD:
         """Create a new subject"""
         db_subject = Subject(
             name=subject_in.name,
-            description=subject_in.description
+            description=subject_in.description,
+            course_center_id=subject_in.course_center_id
         )
         
         try:
@@ -43,10 +44,14 @@ class SubjectCRUD:
     def get_all(
         db: Session,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
+        course_center_id: Optional[UUID] = None
     ) -> List[Subject]:
         """Get all subjects with pagination"""
-        return db.query(Subject).offset(skip).limit(limit).all()
+        query = db.query(Subject)
+        if course_center_id:
+            query = query.filter(Subject.course_center_id == course_center_id)
+        return query.offset(skip).limit(limit).all()
 
     @staticmethod
     def update(db: Session, subject_id: UUID, subject_in: SubjectUpdate) -> Optional[Subject]:

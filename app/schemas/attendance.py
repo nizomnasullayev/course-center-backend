@@ -14,6 +14,8 @@ class AttendanceBase(BaseModel):
     student_id: UUID
     status: AttendanceStatus = AttendanceStatus.PRESENT
     comment: Optional[str] = None
+    grade: Optional[int] = None
+    course_center_id: Optional[UUID] = None
 
 class AttendanceCreate(AttendanceBase):
     pass
@@ -21,10 +23,12 @@ class AttendanceCreate(AttendanceBase):
 class AttendanceUpdate(BaseModel):
     status: Optional[AttendanceStatus] = None
     comment: Optional[str] = None
+    grade: Optional[int] = None
 
 class AttendanceResponse(AttendanceBase):
     id: UUID
     student_name: Optional[str] = None
+    student_phone: Optional[str] = None
 
     class Config:
         from_attributes = True

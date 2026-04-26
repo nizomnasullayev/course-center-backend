@@ -35,7 +35,8 @@ class LessonCRUD:
             teacher_id=teacher_id,
             lesson_date=lesson_in.lesson_date,
             topic=lesson_in.topic,
-            status=lesson_in.status
+            status=lesson_in.status,
+            course_center_id=lesson_in.course_center_id
         )
         
         @background_task
@@ -57,10 +58,15 @@ class LessonCRUD:
         self,
         db: Session,
         skip: int = 0,
-        limit: int = 100
+        limit: int = 100,
+        course_center_id: Optional[UUID] = None
     ) -> tuple[int, List[Lesson]]:
         """Get all lessons globally with pagination"""
-        query = db.query(Lesson).order_by(Lesson.lesson_date.desc())
+        query = db.query(Lesson)
+        if course_center_id:
+            query = query.filter(Lesson.course_center_id == course_center_id)
+            
+        query = query.order_by(Lesson.lesson_date.desc())
         total = query.count()
         items = query.offset(skip).limit(limit).all()
         return total, items

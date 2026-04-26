@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Enum as SQLEnum, Index
+from sqlalchemy import Column, String, Boolean, DateTime, Enum as SQLEnum, Index, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
@@ -8,6 +8,7 @@ from app.database import Base
 
 
 class UserRole(str, enum.Enum):
+    SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     TEACHER = "teacher"
     STUDENT = "student"
@@ -22,6 +23,7 @@ class User(Base):
     phone_number = Column(String(20), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=True)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.STUDENT)
+    course_center_id = Column(UUID(as_uuid=True), ForeignKey("course_centers.id"), nullable=True)
     parents_phone = Column(String(20), nullable=True)
     status = Column(Boolean, default=True, nullable=False)
     telegram_chat_id = Column(String(50), unique=True, nullable=True, index=True)

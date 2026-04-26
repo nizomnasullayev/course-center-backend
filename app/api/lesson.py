@@ -19,7 +19,11 @@ def get_all_lessons(
     current_user: User = Depends(require_admin)
 ):
     """Retrieve all lessons globally (Admin only)"""
-    total, items = lesson_crud.get_all_paginated(db, skip=skip, limit=limit)
+    course_center_id = None
+    if current_user.role != UserRole.SUPER_ADMIN:
+        course_center_id = current_user.course_center_id
+        
+    total, items = lesson_crud.get_all_paginated(db, skip=skip, limit=limit, course_center_id=course_center_id)
     # Join additional info
     for lesson in items:
         lesson.group_name = lesson.group.name
@@ -55,6 +59,9 @@ def create_lesson(
                 detail="Only the assigned teacher or an Admin can create lessons for this group."
             )
             
+    if current_user.role != UserRole.SUPER_ADMIN:
+        lesson_in.course_center_id = current_user.course_center_id
+        
     return lesson_crud.create(db, lesson_in)
 
 @router.put("/{lesson_id}", response_model=LessonResponse)

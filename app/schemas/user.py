@@ -42,6 +42,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Optional[str] = Field(None, min_length=8, max_length=100)
+    course_center_id: Optional[UUID] = None
 
     @field_validator('password')
     @classmethod
@@ -55,6 +56,7 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = Field(None, min_length=5, max_length=20)
     password: Optional[str] = Field(None, min_length=8, max_length=100)
     role: Optional[UserRole] = None
+    course_center_id: Optional[UUID] = None
     parents_phone: Optional[str] = Field(None, min_length=5, max_length=20)
     status: Optional[bool] = None
 
@@ -75,8 +77,11 @@ class UserResponse(BaseModel):
     email: Optional[EmailStr] = None
     phone_number: str
     role: UserRole
+    course_center_id: Optional[UUID] = None
     parents_phone: Optional[str] = None
     status: bool
+    telegram_chat_id: Optional[str] = None
+    telegram_notifications_enabled: bool = True
     created_at: datetime
     updated_at: datetime
 

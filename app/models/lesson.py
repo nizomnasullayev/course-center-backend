@@ -17,6 +17,7 @@ class Lesson(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     group_id = Column(UUID(as_uuid=True), ForeignKey("groups.id", ondelete="CASCADE"), nullable=False)
     teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    course_center_id = Column(UUID(as_uuid=True), ForeignKey("course_centers.id"), nullable=False)
     
     lesson_date = Column(DateTime, nullable=False)
     topic = Column(String(255), nullable=True)

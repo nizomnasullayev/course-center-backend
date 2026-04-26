@@ -5,9 +5,9 @@ from uuid import UUID
 
 from app.database import get_db
 from app.crud.subject import subject_crud
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.subject import SubjectCreate, SubjectUpdate, SubjectResponse
-from app.dependencies import require_admin
+from app.dependencies import require_admin, get_current_user
 
 router = APIRouter(prefix="/subjects", tags=["subjects"])
 
@@ -16,10 +16,15 @@ router = APIRouter(prefix="/subjects", tags=["subjects"])
 def get_all_subjects(
     db: Session = Depends(get_db), 
     skip: int = 0, 
-    limit: int = 100
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
 ):
-    """Retrieve all subjects (Public)"""
-    return subject_crud.get_all(db, skip=skip, limit=limit)
+    """Retrieve all subjects (Logged-in Users)"""
+    course_center_id = None
+    if current_user.role != UserRole.SUPER_ADMIN:
+        course_center_id = current_user.course_center_id
+        
+    return subject_crud.get_all(db, skip=skip, limit=limit, course_center_id=course_center_id)
 
 
 @router.get("/{subject_id}", response_model=SubjectResponse)
@@ -41,6 +46,9 @@ def create_subject(
     admin: User = Depends(require_admin)
 ):
     """Create a new subject (Admin Only)"""
+    if admin.role != UserRole.SUPER_ADMIN:
+        subject_in.course_center_id = admin.course_center_id
+        
     return subject_crud.create(db, subject_in)
 
 

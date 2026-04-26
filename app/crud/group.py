@@ -35,8 +35,16 @@ class GroupCRUD:
         db.refresh(db_group)
         return db_group
 
-    def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> List[Group]:
-        return db.query(Group).offset(skip).limit(limit).all()
+    def get_all(
+        db: Session, 
+        skip: int = 0, 
+        limit: int = 100, 
+        course_center_id: Optional[UUID] = None
+    ) -> List[Group]:
+        query = db.query(Group)
+        if course_center_id:
+            query = query.filter(Group.course_center_id == course_center_id)
+        return query.offset(skip).limit(limit).all()
 
     def get_by_id(self, db: Session, group_id: UUID) -> Optional[Group]:
         return db.query(Group).filter(Group.id == group_id).first()

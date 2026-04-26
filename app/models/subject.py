@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -11,6 +11,7 @@ class Subject(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String(255), nullable=False, unique=True, index=True)
+    course_center_id = Column(UUID(as_uuid=True), ForeignKey("course_centers.id"), nullable=False)
     description = Column(Text, nullable=True)
     
     # Best practice to keep track of when subjects are created/updated

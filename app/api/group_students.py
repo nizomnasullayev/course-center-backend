@@ -18,7 +18,10 @@ def enroll_student(
     admin: User = Depends(require_admin)
 ):
     """Enroll a student into a group (Admin Only)"""
-    return group_student_crud.create(db, enroll_data)
+    membership = group_student_crud.create(db, enroll_data)
+    membership.student_name = membership.student.full_name
+    membership.student_phone = membership.student.phone_number
+    return membership
 
 
 @router.get("/group/{group_id}", response_model=List[GroupStudentResponse])
@@ -31,6 +34,7 @@ def get_group_members(
     students = group_student_crud.get_students_by_group(db, group_id)
     for s in students:
         s.student_name = s.student.full_name
+        s.student_phone = s.student.phone_number
     return students
 
 
