@@ -304,8 +304,8 @@ Sizning profilingiz muvaffaqiyatli ulandi!
     
     def run(self):
         """Main polling loop"""
-        print(f"🤖 Starting Telegram bot: @{self.bot_username}")
-        print(f"✅ Bot is running! Send /start to @{self.bot_username} on Telegram")
+        print(f"[telegram] Starting bot: @{self.bot_username}")
+        print(f"[telegram] Bot is running. Send /start to @{self.bot_username} on Telegram")
         
         while self.running:
             try:
@@ -331,15 +331,15 @@ def start_telegram_poller():
     global _poller_thread, _poller
     
     if not settings.TELEGRAM_USE_POLLING:
-        print("ℹ️ Telegram polling is disabled")
+        print("[telegram] Polling is disabled")
         return False
     
     if not settings.TELEGRAM_BOT_TOKEN:
-        print("❌ TELEGRAM_BOT_TOKEN is not set")
+        print("[telegram] TELEGRAM_BOT_TOKEN is not set")
         return False
     
     if _poller_thread and _poller_thread.is_alive():
-        print("ℹ️ Telegram poller already running")
+        print("[telegram] Poller already running")
         return True
     
     _poller = SimpleTelegramPoller()
@@ -349,7 +349,7 @@ def start_telegram_poller():
     
     _poller_thread = threading.Thread(target=run_poller, daemon=True)
     _poller_thread.start()
-    print("✅ Telegram poller started")
+    print("[telegram] Poller started")
     return True
 
 def stop_telegram_poller():
@@ -357,4 +357,4 @@ def stop_telegram_poller():
     global _poller
     if _poller:
         _poller.stop()
-        print("🛑 Telegram poller stopped")
+        print("[telegram] Poller stopped")
