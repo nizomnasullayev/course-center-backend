@@ -17,7 +17,7 @@ class SubjectCRUD:
             description=subject_in.description,
             course_center_id=subject_in.course_center_id
         )
-        
+
         try:
             db.add(db_subject)
             db.commit()
@@ -43,29 +43,36 @@ class SubjectCRUD:
     @staticmethod
     def get_all(
         db: Session,
+        *,
         skip: int = 0,
         limit: int = 100,
         course_center_id: Optional[UUID] = None
     ) -> List[Subject]:
         """Get all subjects with pagination"""
         query = db.query(Subject)
+
         if course_center_id:
             query = query.filter(Subject.course_center_id == course_center_id)
+
         return query.offset(skip).limit(limit).all()
 
     @staticmethod
-    def update(db: Session, subject_id: UUID, subject_in: SubjectUpdate) -> Optional[Subject]:
+    def update(
+        db: Session,
+        subject_id: UUID,
+        subject_in: SubjectUpdate
+    ) -> Optional[Subject]:
         """Update a subject"""
         db_subject = SubjectCRUD.get_by_id(db, subject_id)
+
         if not db_subject:
             return None
-        
-        # Exclude unset fields so we don't overwrite existing data with None
+
         update_data = subject_in.model_dump(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(db_subject, field, value)
-        
+
         try:
             db.commit()
             db.refresh(db_subject)
@@ -81,9 +88,10 @@ class SubjectCRUD:
     def delete(db: Session, subject_id: UUID) -> bool:
         """Delete a subject (hard delete)"""
         db_subject = SubjectCRUD.get_by_id(db, subject_id)
+
         if not db_subject:
             return False
-        
+
         db.delete(db_subject)
         db.commit()
         return True

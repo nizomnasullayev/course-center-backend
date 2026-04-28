@@ -57,6 +57,7 @@ class UserCRUD:
         return db.query(User).filter(User.email == email).first()
 
     @staticmethod
+
     def get_all(
         db: Session,
         skip: int = 0,

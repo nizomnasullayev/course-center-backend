@@ -36,6 +36,7 @@ class GroupCRUD:
         return db_group
 
     def get_all(
+        self,
         db: Session, 
         skip: int = 0, 
         limit: int = 100, 
