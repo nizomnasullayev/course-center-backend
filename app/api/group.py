@@ -28,6 +28,15 @@ def get_all_groups(
     return group_crud.get_all(db, skip=skip, limit=limit, course_center_id=course_center_id)
 
 
+@router.get("/my-groups", response_model=List[GroupResponse])
+def get_my_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieve groups for the current logged-in user (Student or Teacher)"""
+    return group_crud.get_by_user(db, current_user)
+
+
 @router.get("/{group_id}", response_model=GroupResponse)
 def get_group(
     group_id: UUID, 

@@ -81,4 +81,13 @@ class GroupCRUD:
         db.commit()
         return True
 
+    def get_by_user(self, db: Session, user: User) -> List[Group]:
+        """Fetch all groups a user is involved in (Teacher or Student)"""
+        if user.role == UserRole.TEACHER:
+            return db.query(Group).filter(Group.teacher_id == user.id).all()
+        elif user.role == UserRole.STUDENT:
+            from app.models.group_student import GroupStudent
+            return db.query(Group).join(GroupStudent).filter(GroupStudent.student_id == user.id).all()
+        return []
+
 group_crud = GroupCRUD()

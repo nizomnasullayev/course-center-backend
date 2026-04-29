@@ -52,7 +52,6 @@ class CourseCenterCRUD:
 
     @staticmethod
     def get_all(
-        self,
         db: Session, 
         skip: int = 0, 
         limit: int = 100,
